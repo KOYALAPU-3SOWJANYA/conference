@@ -1,9 +1,9 @@
 from datetime import date, datetime
 from typing import List, Optional
 
-from sqlalchemy import (Boolean, Date, DateTime, ForeignKey, Integer, String, Text,
+from sqlalchemy import (Boolean, Date, DateTime, ForeignKey, Integer, LargeBinary, String, Text,
                         UniqueConstraint, func)
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, deferred, mapped_column, relationship
 
 from .database import Base
 
@@ -50,6 +50,16 @@ class CommitteeMember(Base):
     designation: Mapped[Optional[str]] = mapped_column(String(200))
     affiliation: Mapped[Optional[str]] = mapped_column(String(255))
     sort_order: Mapped[int] = mapped_column(Integer, default=0)
+    # photo is kept in its own table so existing databases need no column migration
+    photo: Mapped[Optional["MemberPhoto"]] = relationship(cascade="all, delete-orphan", uselist=False, lazy="selectin")
+
+
+class MemberPhoto(Base):
+    __tablename__ = "member_photos"
+    member_id: Mapped[int] = mapped_column(ForeignKey("committee_members.id", ondelete="CASCADE"), primary_key=True)
+    photo_type: Mapped[str] = mapped_column(String(30))
+    photo_data: Mapped[bytes] = deferred(mapped_column(LargeBinary))
+    rev: Mapped[int] = mapped_column(Integer, default=1)
 
 
 class ImportantDate(Base):
@@ -213,3 +223,19 @@ class Registration(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     paper: Mapped[Optional[Paper]] = relationship()
+
+
+class Speaker(Base):
+    """Keynote / invited speakers shown on the home page. The photo lives in the database (not on disk) so it
+    survives restarts and redeploys on hosts with an ephemeral file system."""
+    __tablename__ = "speakers"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    kind: Mapped[str] = mapped_column(String(10), default="invited", index=True)   # keynote | invited
+    name: Mapped[str] = mapped_column(String(160))
+    designation: Mapped[Optional[str]] = mapped_column(String(300))
+    details: Mapped[Optional[str]] = mapped_column(String(600))
+    sort_order: Mapped[int] = mapped_column(Integer, default=0)
+    photo_type: Mapped[Optional[str]] = mapped_column(String(30))
+    photo_data: Mapped[Optional[bytes]] = deferred(mapped_column(LargeBinary))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

@@ -1,4 +1,4 @@
-import { Bell, BookOpenCheck, CalendarCheck, ClipboardList, CreditCard, FilePlus2, FileText, History, LayoutDashboard, LibraryBig, Mail, Settings2, UserCog, UserRound, Users, UsersRound } from "lucide-react";
+import { Bell, BookOpenCheck, CalendarCheck, ClipboardList, CreditCard, FilePlus2, Mic, FileText, History, LayoutDashboard, LibraryBig, Mail, Settings2, UserCog, UserRound, Users, UsersRound } from "lucide-react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import DashboardLayout, { NavItem } from "./components/DashboardLayout";
 import PublicLayout from "./components/PublicLayout";
@@ -16,6 +16,7 @@ import Progress from "./pages/admin/Progress";
 import Content from "./pages/admin/Content";
 import Messages from "./pages/admin/Messages";
 import Registrations from "./pages/admin/Registrations";
+import AdminSpeakers from "./pages/admin/Speakers";
 import AuthorOverview from "./pages/author/Overview";
 import AuthorPapers from "./pages/author/Papers";
 import Submit from "./pages/author/Submit";
@@ -30,7 +31,7 @@ const ADMIN_NAV: NavItem[] = [
   { to: "/admin", label: "Overview", icon: LayoutDashboard, end: true }, { to: "/admin/papers", label: "Papers", icon: FileText },
   { to: "/admin/progress", label: "Review Progress", icon: ClipboardList }, { to: "/admin/reviewers", label: "Reviewers", icon: UserCog },
   { to: "/admin/authors", label: "Authors", icon: Users }, { to: "/admin/content", label: "Conference Content", icon: Settings2 },
-  { to: "/admin/registrations", label: "Registrations", icon: CreditCard }, { to: "/admin/messages", label: "Messages", icon: Mail }, { to: "/admin/notifications", label: "Notifications", icon: Bell }, { to: "/admin/profile", label: "Profile", icon: UserRound },
+  { to: "/admin/speakers", label: "Speakers & Committees", icon: Mic }, { to: "/admin/registrations", label: "Registrations", icon: CreditCard }, { to: "/admin/messages", label: "Messages", icon: Mail }, { to: "/admin/notifications", label: "Notifications", icon: Bell }, { to: "/admin/profile", label: "Profile", icon: UserRound },
 ];
 const AUTHOR_NAV: NavItem[] = [
   { to: "/author", label: "Dashboard", icon: LayoutDashboard, end: true }, { to: "/author/submit", label: "Submit Paper", icon: FilePlus2 },
@@ -58,7 +59,7 @@ export default function App() {
       <Route path="/admin" element={<RequireRole role="admin"><DashboardLayout role="admin" nav={ADMIN_NAV} /></RequireRole>}>
         <Route index element={<AdminOverview />} /><Route path="papers" element={<AdminPapers />} /><Route path="papers/:id" element={<AdminPaperDetail />} />
         <Route path="progress" element={<Progress />} /><Route path="reviewers" element={<AdminUsers role="reviewer" />} /><Route path="authors" element={<AdminUsers role="author" />} />
-        <Route path="content" element={<Content />} /><Route path="registrations" element={<Registrations />} /><Route path="messages" element={<Messages />} /><Route path="notifications" element={<Notifications />} /><Route path="profile" element={<Profile />} />
+        <Route path="content" element={<Content />} /><Route path="speakers" element={<AdminSpeakers />} /><Route path="registrations" element={<Registrations />} /><Route path="messages" element={<Messages />} /><Route path="notifications" element={<Notifications />} /><Route path="profile" element={<Profile />} />
       </Route>
       <Route path="/author" element={<RequireRole role="author"><DashboardLayout role="author" nav={AUTHOR_NAV} /></RequireRole>}>
         <Route index element={<AuthorOverview />} /><Route path="submit" element={<Submit />} /><Route path="papers" element={<AuthorPapers />} /><Route path="papers/:id" element={<AuthorPaperDetail />} />

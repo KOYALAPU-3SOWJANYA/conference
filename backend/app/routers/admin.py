@@ -374,6 +374,21 @@ def _track_guard(db: Session, t: Track):
 
 crud("tracks", Track, TrackIn, track_out, (Track.sort_order, Track.id), _track_guard)
 crud("committees", CommitteeMember, MemberIn, member_out, (CommitteeMember.sort_order, CommitteeMember.id))
+
+
+@router.post("/committees/load-brochure")
+def load_brochure_committees(db: Session = Depends(get_db)):
+    """Replace ALL committee members with the list printed in the NISE-2026 brochure (admin can edit it afterwards)."""
+    from ..seed import committee_rows
+    for m in db.scalars(select(CommitteeMember)):
+        db.delete(m)
+    db.flush()
+    rows = list(committee_rows())
+    db.add_all(rows)
+    db.commit()
+    return {"count": len(rows)}
+
+
 crud("dates", ImportantDate, DateIn, date_out, (ImportantDate.event_date, ImportantDate.id))
 
 

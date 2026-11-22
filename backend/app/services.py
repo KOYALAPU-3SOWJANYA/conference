@@ -17,7 +17,7 @@ SETTING_KEYS = {
     "conference_name", "full_name", "subtitle", "tagline", "start_date", "end_date", "venue",
     "organizer", "institution_name", "about_conference", "about_institution", "contact_email",
     "contact_phone", "contact_address", "submission_deadline", "submissions_open",
-    "objectives", "guidelines", "registration_fees", "registration_link", "submission_email", "publication_note",
+    "objectives", "guidelines", "registration_fees", "registration_link", "submission_email", "submission_link", "publication_note",
     "contact_person", "website",
 }
 
@@ -34,6 +34,7 @@ def get_settings(db: Session) -> dict:
         elif s.key in BOOL_KEYS:
             v = v == "true"
         out[s.key] = v
+    out.setdefault("registration_fees", [])
     return out
 
 

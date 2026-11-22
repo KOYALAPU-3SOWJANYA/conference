@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useSite } from "../../components/PublicLayout";
 import { useCountdown } from "../../lib/hooks";
 import { dateRange, fmtDate } from "../../lib/format";
+import SpeakersSection from "../../components/Speakers";
 
 export const ICONS: Record<string, any> = { brain: Brain, database: Database, shield: ShieldCheck, cpu: Cpu, cloud: Cloud, heart: Heart, leaf: Leaf, flask: FlaskConical };
 
@@ -22,7 +23,7 @@ export default function Home() {
             <h1 className="mt-6 font-display text-5xl font-extrabold leading-[1.05] text-white md:text-7xl">NI<span className="gradient-text">SE</span> 2026</h1>
             <p className="mt-3 font-display text-2xl font-semibold text-blue-100 md:text-3xl">{s.full_name}</p>
             <p className="mt-5 max-w-xl text-lg text-blue-100/80">{s.tagline}. Organised by the {s.organizer}, {s.institution_name}.</p>
-            <p className="mt-2 max-w-xl text-sm text-blue-100/70">{s.publication_note}</p>
+            <p className="mt-2 max-w-xl text-sm text-blue-100/70">{s.publication_note ?? ""}</p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link to="/author/login" state={{ signup: true }} className="btn btn-lg bg-white text-navy shadow-glow hover:-translate-y-0.5">Submit your paper <ArrowRight className="h-4 w-4" /></Link>
               <Link to="/guidelines" className="btn btn-lg btn-outline">Submission guidelines</Link>
@@ -68,6 +69,8 @@ export default function Home() {
         </div>
       </section>
 
+      <SpeakersSection />
+
       <section className="bg-gradient-to-b from-white to-mist py-20">
         <div className="section">
           <div className="mx-auto max-w-2xl text-center"><p className="text-sm font-semibold uppercase tracking-widest text-royal">Technical tracks</p><h2 className="mt-2 text-3xl font-bold md:text-4xl">Find the right home for your research</h2></div>
@@ -84,7 +87,7 @@ export default function Home() {
         <div className="mx-auto max-w-2xl text-center"><p className="text-sm font-semibold uppercase tracking-widest text-royal">Registration</p><h2 className="mt-2 text-3xl font-bold md:text-4xl">Registration fees</h2>
           <p className="mt-2 text-sm text-slate-500">Last date of registration: {fmtDate(dates.find((d) => /registration/i.test(d.label))?.event_date ?? s.submission_deadline, true)}</p></div>
         <div className="stagger mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {s.registration_fees.map((f) => { const [cat, amt] = f.split("|").map((x) => x.trim()); return (
+          {(s.registration_fees ?? []).map((f) => { const [cat, amt] = f.split("|").map((x) => x.trim()); return (
             <div key={f} className="card card-hover p-6 text-center"><p className="text-sm font-semibold text-slate-500">{cat}</p><p className="mt-2 font-display text-3xl font-bold text-navy">{amt}</p></div>); })}
         </div>
         <div className="mt-8 text-center"><Link to="/registration" className="btn btn-primary">How to register <ArrowRight className="h-4 w-4" /></Link></div>

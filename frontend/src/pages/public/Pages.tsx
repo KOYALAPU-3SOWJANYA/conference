@@ -1,10 +1,13 @@
-import { AlertTriangle, Calendar, CheckCircle2, Clock, Globe, Mail, MapPin, Phone, Search, Send, Sparkles, UserRound, XCircle } from "lucide-react";
+import { AlertTriangle, Calendar, CheckCircle2, Clock, Globe, Link2, Mail, MapPin, Phone, Search, Send, Sparkles, UserRound, XCircle } from "lucide-react";
 import { FormEvent, ReactNode, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button, Card, Field, Input, Select, Textarea, useToast } from "../../components/ui";
 import { useSite } from "../../components/PublicLayout";
+import { groupRank, isPatronGroup, SpeakerPhoto } from "../../components/Speakers";
 import { api } from "../../lib/api";
 import { dateRange, fmtDate } from "../../lib/format";
+import { useFetch } from "../../lib/hooks";
+import { Speaker } from "../../lib/types";
 import { ICONS } from "./Home";
 
 function Hero({ eyebrow, title, text }: { eyebrow: string; title: string; text?: string }) {
@@ -55,15 +58,36 @@ export function Tracks() {
         <h3 className="text-lg font-semibold">{t.name}</h3><p className="mt-2 text-sm text-slate-500">{t.description}</p></Card>); })}</div></Body></>);
 }
 
+/** Same look for everyone (patrons, committees, keynote, invited speakers): big round profile photo, or gradient initials when no photo. */
+function PersonCard({ name, line, photo }: { name: string; line: string; photo?: { name: string; photo_url: string | null } }) {
+  return (<Card className="card-hover flex items-center gap-5 p-6">
+    <SpeakerPhoto s={photo ?? { name, photo_url: null }} className="h-20 w-20" rounded="rounded-full" />
+    <div className="min-w-0"><p className="text-lg font-semibold leading-snug text-navy">{name}</p>
+      <p className="mt-1 text-sm leading-snug text-slate-500">{line || "—"}</p></div></Card>);
+}
+
 export function Committees() {
   const { committees, settings: s } = useSite();
-  const groups = [...new Set(committees.map((c) => c.group))];
+  const { data: speakers } = useFetch<Speaker[]>("/public/speakers");
+  const groups = [...new Set(committees.map((c) => c.group))].sort((a, b) => groupRank(a) - groupRank(b));   // stable sort
+  const keynote = (speakers ?? []).filter((x) => x.kind === "keynote");
+  const invited = (speakers ?? []).filter((x) => x.kind === "invited");
+  const spLine = (x: Speaker) => [x.designation, x.details].filter(Boolean).join(", ");
+  const Heading = ({ children, big }: { children: string; big?: boolean }) => (
+    <h2 className={`mb-4 flex items-center gap-3 font-bold ${big ? "text-3xl" : "text-2xl"}`}><span className="h-8 w-1.5 rounded-full bg-gradient-to-b from-royal to-plum" />{children}</h2>);
+  const grid = "grid gap-4 sm:grid-cols-2 lg:grid-cols-3";
+  const groupBlock = (g: string) => (<div key={g}><Heading>{g}</Heading>
+    <div className={grid}>{committees.filter((c) => c.group === g).map((m) => <PersonCard key={m.id} name={m.name} line={[m.designation, m.affiliation].filter(Boolean).join(", ")} photo={m.photo_url ? { name: m.name, photo_url: m.photo_url } : undefined} />)}</div></div>);
+  const patrons = groups.filter(isPatronGroup), organising = groups.filter((g) => !isPatronGroup(g));
   return (<><Hero eyebrow="Committees" title={`The people behind ${s.conference_name}`} />
-    <Body><div className="space-y-10">{groups.map((g) => (
-      <div key={g}><h2 className="mb-4 flex items-center gap-3 text-2xl font-bold"><span className="h-8 w-1.5 rounded-full bg-gradient-to-b from-royal to-plum" />{g}</h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{committees.filter((c) => c.group === g).map((m) => (
-          <Card key={m.id} className="card-hover flex items-center gap-4 p-5"><span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-gradient-to-br from-navy to-royal font-display font-bold text-white">{m.name[0]}</span>
-            <div className="min-w-0"><p className="truncate font-semibold text-navy">{m.name}</p><p className="truncate text-xs text-slate-500">{[m.designation, m.affiliation].filter(Boolean).join(" · ") || "—"}</p></div></Card>))}</div></div>))}</div></Body></>);
+    <Body><div className="space-y-14">
+      {(patrons.length > 0 || keynote.length > 0 || invited.length > 0) && <section className="space-y-10"><Heading big>Patrons &amp; Advisors</Heading>
+        {patrons.map(groupBlock)}
+        {keynote.length > 0 && <div><Heading>Keynote Address</Heading><div className={grid}>{keynote.map((x) => <PersonCard key={x.id} name={x.name} line={spLine(x)} photo={x} />)}</div></div>}
+        {invited.length > 0 && <div><Heading>Invited Speakers</Heading><div className={grid}>{invited.map((x) => <PersonCard key={x.id} name={x.name} line={spLine(x)} photo={x} />)}</div></div>}
+      </section>}
+      {organising.length > 0 && <section className="space-y-10"><Heading big>Organizing Committee</Heading>{organising.map(groupBlock)}</section>}
+    </div></Body></>);
 }
 
 export function Dates() {
@@ -81,14 +105,18 @@ export function Guidelines() {
     <Body><div className="grid gap-8 lg:grid-cols-3"><Card className="p-8 lg:col-span-2"><ul className="space-y-4">{s.guidelines.map((g, i) => (
       <li key={i} className="flex gap-3"><CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-electric" /><span className="text-slate-700">{g}</span></li>))}</ul></Card>
       <Card className="p-6"><h3 className="text-lg font-semibold">How to submit</h3>
-        {s.submission_email && <p className="mt-2 rounded-xl bg-blue-50 p-3 text-xs text-slate-600">Full length papers in <b>IEEE format</b> can also be sent to <b className="text-navy">{s.submission_email}</b>.</p>}
+        <p className="mt-2 rounded-xl bg-blue-50 p-3 text-xs text-slate-600">Submit your full length paper in <b>IEEE format</b> online at <a href={submissionLink(s)} target="_blank" rel="noreferrer" className="break-all font-semibold text-royal underline">{submissionLink(s)}</a>.</p>
         <ol className="mt-4 space-y-3 text-sm text-slate-600">{["Create an author account", "Open “Submit Paper” in your dashboard", "Fill in details and upload your PDF", "Track review status & feedback live"].map((t, i) => (
           <li key={i} className="flex gap-3"><span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-royal text-xs font-bold text-white">{i + 1}</span>{t}</li>))}</ol>
         <Link to="/author/login" state={{ signup: true }} className="btn btn-primary mt-6 w-full">{s.submissions_open ? "Start submission" : "Submissions closed"}</Link></Card></div></Body></>);
 }
 
+/** Admin-set link, or this site's own paper-submission page. */
+const submissionLink = (s: { submission_link?: string }) => (s.submission_link || "").trim() || `${window.location.origin}/author/submit`;
+
 export function Contact() {
   const { settings: s } = useSite();
+  const subLink = submissionLink(s);
   const toast = useToast();
   const [f, setF] = useState({ name: "", email: "", subject: "", message: "" });
   const [busy, setBusy] = useState(false);
@@ -100,7 +128,7 @@ export function Contact() {
   const set = (k: string) => (e: any) => setF({ ...f, [k]: e.target.value });
   return (<><Hero eyebrow="Contact" title="Get in touch" text="Questions about submissions, registration or the programme? Write to us." />
     <Body><div className="grid gap-8 lg:grid-cols-5"><Card className="space-y-5 p-6 lg:col-span-2">
-      {[[UserRound, "Correspondence", s.contact_person || "—"], [MapPin, "Address", s.contact_address], [Mail, "Email", s.contact_email || "Use the form"], [Mail, "Paper submission email", s.submission_email || "—"], [Phone, "Phone", s.contact_phone || "—"], [Globe, "Conference website", s.website || "—"]].map(([I, k, v]: any) => (
+      {[[UserRound, "Correspondence", s.contact_person || "—"], [MapPin, "Address", s.contact_address], [Mail, "Email", s.contact_email || "Use the form"], [Link2, "Paper submission link", <a href={subLink} target="_blank" rel="noreferrer" className="break-all text-royal underline-offset-2 hover:underline">{subLink}</a>], [Phone, "Phone", s.contact_phone || "—"], [Globe, "Conference website", s.website || "—"]].map(([I, k, v]: any) => (
         <div key={k} className="flex gap-3"><div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-blue-50 text-royal"><I className="h-5 w-5" /></div><div><p className="text-xs font-semibold uppercase text-slate-400">{k}</p><p className="text-sm font-medium text-navy">{v}</p></div></div>))}</Card>
       <Card className="p-6 lg:col-span-3"><form onSubmit={submit} className="grid gap-4 sm:grid-cols-2">
         <Field label="Name"><Input required minLength={2} value={f.name} onChange={set("name")} /></Field><Field label="Email"><Input type="email" required value={f.email} onChange={set("email")} /></Field>
@@ -170,7 +198,7 @@ export function Registration() {
 
             <div className="sm:col-span-2 rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
               <div className="grid gap-4 sm:grid-cols-[1fr_auto] sm:items-end">
-                <Field label="Paper ID" hint="Leave empty if you are attending without a paper"><Input placeholder="e.g. RAiSE26-0001" value={f.paper_code} onChange={set("paper_code")} /></Field>
+                <Field label="Paper ID" hint="Leave empty if you are attending without a paper"><Input placeholder="e.g. NISE2026-0001" value={f.paper_code} onChange={set("paper_code")} /></Field>
                 <Button type="button" variant="secondary" loading={checking} disabled={!hasPaper} icon={<Search className="h-4 w-4" />} onClick={verify}>Verify paper</Button>
               </div>
               <Field label="Paper title" className="mt-4"><Input readOnly value={paper?.title ?? ""} placeholder={hasPaper ? "Filled automatically after verification" : "Not applicable"} className="bg-slate-100" /></Field>

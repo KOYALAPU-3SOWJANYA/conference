@@ -1,5 +1,6 @@
 const BASE: string = (import.meta as any).env?.VITE_API_URL ?? "http://localhost:8000";
 const KEY = "raise_token";
+export const API_BASE = BASE;   // for building image URLs that come back from the API
 
 // sessionStorage = one login per browser tab, so being signed in as admin in one tab can never
 // overwrite the reviewer/author login of another tab (that caused random 403 errors with localStorage).

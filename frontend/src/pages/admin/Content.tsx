@@ -4,7 +4,7 @@ import { Button, Card, CardHeader, ConfirmModal, Empty, ErrorBox, Field, Input, 
 import { api } from "../../lib/api";
 import { fmtDate } from "../../lib/format";
 import { useFetch } from "../../lib/hooks";
-import { ImportantDate, Member, SiteSettings, Track } from "../../lib/types";
+import { ImportantDate, SiteSettings, Track } from "../../lib/types";
 
 /* ---------- reusable CRUD manager ---------- */
 function Crud<T extends { id: number }>({ path, title, columns, fields, blank, toForm }: {
@@ -66,7 +66,7 @@ function InfoForm() {
         <Field label="Venue" className="sm:col-span-2"><Input value={f.venue} onChange={set("venue")} /></Field>
         <Field label="Organiser"><Input value={f.organizer} onChange={set("organizer")} /></Field><Field label="Institution"><Input value={f.institution_name} onChange={set("institution_name")} /></Field></div></Card>
       <Card><CardHeader title="Contact details" /><div className="grid gap-4 p-5"><Field label="Email"><Input type="email" value={f.contact_email} onChange={set("contact_email")} /></Field><Field label="Phone"><Input value={f.contact_phone} onChange={set("contact_phone")} /></Field><Field label="Address"><Textarea rows={3} value={f.contact_address} onChange={set("contact_address")} /></Field>
-        <Field label="Contact person"><Input value={f.contact_person ?? ""} onChange={set("contact_person")} /></Field><Field label="Paper submission email"><Input type="email" value={f.submission_email ?? ""} onChange={set("submission_email")} /></Field><Field label="Conference website"><Input value={f.website ?? ""} onChange={set("website")} /></Field></div></Card>
+        <Field label="Contact person"><Input value={f.contact_person ?? ""} onChange={set("contact_person")} /></Field><Field label="Paper submission link" hint="Leave empty to use the built-in submission page of this site"><Input type="url" placeholder="https://..." value={f.submission_link ?? ""} onChange={set("submission_link")} /></Field><Field label="Conference website"><Input value={f.website ?? ""} onChange={set("website")} /></Field></div></Card>
       <Card><CardHeader title="Registration & publication" subtitle="Fees: one per line as  Category | Amount" /><div className="grid gap-4 p-5"><Field label="Registration fees"><Textarea rows={5} value={f.registration_fees} onChange={set("registration_fees")} /></Field><Field label="Registration form link"><Input value={f.registration_link ?? ""} onChange={set("registration_link")} /></Field><Field label="Publication note"><Textarea rows={2} value={f.publication_note ?? ""} onChange={set("publication_note")} /></Field></div></Card>
       <Card><CardHeader title="About the conference" /><div className="p-5"><Textarea rows={7} value={f.about_conference} onChange={set("about_conference")} /></div></Card>
       <Card><CardHeader title="About the institution" /><div className="p-5"><Textarea rows={7} value={f.about_institution} onChange={set("about_institution")} /></div></Card>
@@ -78,18 +78,15 @@ function InfoForm() {
 }
 
 export default function Content() {
-  const [tab, setTab] = useState<"info" | "tracks" | "committees" | "dates">("info");
+  const [tab, setTab] = useState<"info" | "tracks" | "dates">("info");
   return (
     <>
       <PageHeader title="Conference Content" subtitle="Everything here powers the public website — changes go live instantly" />
-      <div className="mb-6"><Tabs value={tab} onChange={setTab} tabs={[{ id: "info", label: "Conference info" }, { id: "tracks", label: "Technical tracks" }, { id: "committees", label: "Committees" }, { id: "dates", label: "Important dates" }]} /></div>
+      <div className="mb-6"><Tabs value={tab} onChange={setTab} tabs={[{ id: "info", label: "Conference info" }, { id: "tracks", label: "Technical tracks" }, { id: "dates", label: "Important dates" }]} /></div>
       {tab === "info" && <InfoForm />}
       {tab === "tracks" && <Crud<Track> key="t" path="tracks" title="Track" blank={{ name: "", description: "", icon: "", sort_order: 0 }}
         columns={[{ h: "Order", r: (x) => x.sort_order }, { h: "Track", r: (x) => <b className="text-navy">{x.name}</b> }, { h: "Description", r: (x) => x.description }]}
         fields={[{ k: "name", l: "Track name", required: true }, { k: "description", l: "Description", area: true }, { k: "icon", l: "Icon", options: ["", "brain", "database", "shield", "cpu", "cloud", "heart", "leaf", "flask"] }, { k: "sort_order", l: "Display order", type: "number" }]} />}
-      {tab === "committees" && <Crud<Member> key="c" path="committees" title="Committee member" blank={{ group: "Organizing Committee", name: "", designation: "", affiliation: "", sort_order: 0 }}
-        columns={[{ h: "Committee", r: (x) => x.group }, { h: "Name", r: (x) => <b className="text-navy">{x.name}</b> }, { h: "Designation", r: (x) => x.designation }, { h: "Affiliation", r: (x) => x.affiliation }]}
-        fields={[{ k: "group", l: "Committee / group", required: true }, { k: "name", l: "Name", required: true }, { k: "designation", l: "Designation" }, { k: "affiliation", l: "Affiliation" }, { k: "sort_order", l: "Display order", type: "number" }]} />}
       {tab === "dates" && <Crud<ImportantDate> key="d" path="dates" title="Important date" blank={{ label: "", event_date: "", note: "", sort_order: 0 }}
         columns={[{ h: "Date", r: (x) => fmtDate(x.event_date) }, { h: "Event", r: (x) => <b className="text-navy">{x.label}</b> }, { h: "Note", r: (x) => x.note }]}
         fields={[{ k: "label", l: "Event", required: true }, { k: "event_date", l: "Date", type: "date", required: true }, { k: "note", l: "Note" }, { k: "sort_order", l: "Display order", type: "number" }]} />}

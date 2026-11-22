@@ -39,7 +39,7 @@ def submit_paper(title: str = Form(..., min_length=5, max_length=500), abstract:
                   co_authors=co_authors.strip(), author_id=user.id, track_id=track_id)
     db.add(paper)
     db.flush()
-    paper.paper_code = f"RAiSE26-{paper.id:04d}"
+    paper.paper_code = f"NISE2026-{paper.id:04d}"
     rel, size, name = save_pdf(file, paper.id, 1)
     db.add(PaperVersion(paper_id=paper.id, version_no=1, original_filename=name, stored_path=rel, file_size=size,
                         note="Initial submission"))

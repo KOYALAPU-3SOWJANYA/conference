@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .config import settings
 from .database import Base, SessionLocal, engine
-from .routers import admin, author, auth, public, registrations, reviewer
+from .routers import admin, author, auth, public, registrations, reviewer, speakers
 from .seed import seed_defaults
 
 
@@ -25,7 +25,7 @@ app.add_middleware(CORSMiddleware, allow_origins=[o.strip() for o in settings.CO
                    allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
 for r in (auth.router, public.router, author.router, reviewer.router, admin.router,
-          registrations.public, registrations.admin):
+          registrations.public, registrations.admin, speakers.public, speakers.admin):
     app.include_router(r)
 
 

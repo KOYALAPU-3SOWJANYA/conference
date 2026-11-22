@@ -17,7 +17,8 @@ def track_out(t):
 
 def member_out(m):
     return {"id": m.id, "group": m.group, "name": m.name, "designation": m.designation,
-            "affiliation": m.affiliation, "sort_order": m.sort_order}
+            "affiliation": m.affiliation, "sort_order": m.sort_order,
+            "photo_url": f"/api/public/committee/{m.id}/photo?v={m.photo.rev}" if m.photo else None}
 
 
 def date_out(d):

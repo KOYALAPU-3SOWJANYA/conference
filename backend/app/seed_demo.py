@@ -67,7 +67,7 @@ def main():
                                 "the sample paper so that reviewers and administrators have realistic content to work with."))
             db.add(p)
             db.flush()
-            p.paper_code = f"RAiSE26-{p.id:04d}"
+            p.paper_code = f"NISE2026-{p.id:04d}"
             rel = f"papers/{p.id}/v1_demo.pdf"
             f = Path(settings.STORAGE_DIR) / rel
             f.parent.mkdir(parents=True, exist_ok=True)

@@ -8,14 +8,14 @@ export interface User {
   papers?: number; assigned?: number; completed?: number;
 }
 export interface Track { id: number; name: string; description?: string | null; icon?: string | null; sort_order: number }
-export interface Member { id: number; group: string; name: string; designation?: string | null; affiliation?: string | null; sort_order: number }
+export interface Member { id: number; group: string; name: string; designation?: string | null; affiliation?: string | null; sort_order: number; photo_url?: string | null }
 export interface ImportantDate { id: number; label: string; event_date: string; note?: string | null; sort_order: number }
 export interface SiteSettings {
   conference_name: string; full_name: string; subtitle: string; tagline: string; start_date: string; end_date: string;
   submission_deadline: string; venue: string; organizer: string; institution_name: string; contact_email: string;
   contact_phone: string; contact_address: string; submissions_open: boolean; about_conference: string;
   about_institution: string; objectives: string[]; guidelines: string[];
-  contact_person: string; submission_email: string; website: string; registration_link: string;
+  contact_person: string; submission_email: string; submission_link: string; website: string; registration_link: string;
   registration_fees: string[]; publication_note: string;
 }
 export interface SiteData { settings: SiteSettings; tracks: Track[]; committees: Member[]; dates: ImportantDate[] }
@@ -64,3 +64,5 @@ export interface Registration {
   name: string; designation: string; organization: string; address: string; mobile: string; email: string; category: string;
   amount: number; upi_reference: string; payment_status: "pending" | "verified" | "rejected"; admin_note?: string | null; created_at: string;
 }
+
+export interface Speaker { id: number; kind: "keynote" | "invited"; name: string; designation: string; details: string; sort_order: number; photo_url: string | null }

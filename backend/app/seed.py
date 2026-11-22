@@ -7,7 +7,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from .config import settings
-from .models import CommitteeMember, ImportantDate, Setting, Track, User
+from .models import CommitteeMember, ImportantDate, Paper, Registration, Setting, Speaker, Track, User
 from .security import hash_password
 
 DEFAULT_SETTINGS = {
@@ -26,6 +26,7 @@ DEFAULT_SETTINGS = {
     "contact_address": "GVP College of Engineering for Women, Madhurawada, Visakhapatnam – 48, Andhra Pradesh, India",
     "contact_person": "Dr. PVS Lakshmi Jagadamba, Organizing Secretary",
     "submission_email": "etisconf@gvpce.ac.in",
+    "submission_link": "",   # empty = link to this site's own paper-submission page
     "website": "www.gvpcew.ac.in",
     "registration_link": "http://gvpwims.in/ETIS/index.php?page=register",
     "registration_fees": json.dumps([
@@ -95,72 +96,66 @@ DEFAULT_TRACKS = [
 
 # group -> "Name, Designation, Affiliation" lines (straight from the brochure)
 COMMITTEE_DATA = [
-    ("Chief Patrons", [
-        "Prof. Dr. Ing. P. S. Rao, Chancellor, GVPIHLR",
+    ("Chief Patron", [
+        "Prof. Dr. Ing. P. S. Rao, Hon’ble Chancellor, GVPIHLR",
         "Sri. D. Dakshina Murthy, President, Gayatri Vidya Parishad",
     ]),
     ("Patrons", [
-        "Dr. K. P. R. Sastry, Vice-President, GVPIHLR",
-        "Dr. B. Subba Rao, Vice-President, GVPIHLR",
-        "Prof. P. Somaraju, Secretary, GVPIHLR",
-        "Prof. P. Rajaganapathi, Treasurer, GVPIHLR",
-        "Sri V. R. K. S. Siva Prasad, Member, GVPIHLR",
-        "Sri A. S. N. Prasad, Member, GVPIHLR",
-        "Prof. P. V. Sarma, Member, GVPIHLR",
-        "Prof. V. S. R. Krishna Prasad, Member, GVPIHLR",
+        "Prof. Dr. K. P. R. Sastry, Vice-President, Gayatri Vidya Parishad",
+        "Prof. Dr. B. Subba Rao, Vice-President, Gayatri Vidya Parishad",
+        "Prof. Dr. P. Somaraju, Secretary, Gayatri Vidya Parishad",
+        "Prof. Dr. P. Rajaganapathi, Treasurer, Gayatri Vidya Parishad",
+        "Sri V. R. K. S. Siva Prasad, Member, Gayatri Vidya Parishad",
+        "Sri A. S. N. Prasad, Member, Gayatri Vidya Parishad",
+        "Prof. Dr. P. V. Sarma, Member, Gayatri Vidya Parishad",
+        "Prof. Dr. V. S. R. Krishna Prasad, Member, Gayatri Vidya Parishad",
     ]),
     ("Co-Patrons", [
-        "Prof. Dr. P. S. Avadhani, Vice-Chancellor, GVPIHLR",
-        "Prof. Dr. P Venkata Rao, Registrar, GVPIHLR",
+        "Prof. Dr. P. S. Avadhani, Hon’ble Vice-Chancellor, GVPIHLR",
+        "Prof. Dr. P. Venkata Rao, Registrar, GVPIHLR",
     ]),
     ("Advisory Committee", [
-        "Prof. Dr. A. Bala Koteswara Rao, Pro-Chancellor, GVPIHLR",
+        "Prof. Dr. A. Bala Koteswara Rao, Pro Vice-Chancellor, GVPIHLR",
         "Prof. Dr. G. Sudheer, Dean Academics & Planning, GVPIHLR",
-        "Prof. Dr. R K Goswami, Principal, GVPCEW",
+        "Prof. Dr. R. K. Goswami, Principal, GVPCEW(A)",
         "Prof. Dr. P. Krishna Subba Rao, Principal, GVPCE(A)",
-        "Prof. K. S. Bose, Principal, GVPCDPGDC",
+        "Prof. Dr. K. S. Bose, Principal, GVPCDPGC(A)",
         "Prof. Dr. A. Syamsundar, Vice-Principal, GVPCE(A)",
-        "Prof. Dr. C Srinivas, CoE, GVPIHLR",
-        "Prof. M. Shashi, Professor, GVPIHLR",
+        "Prof. Dr. C. Srinivas, CoE, GVPIHLR",
+        "Prof. Dr. M. Shashi, Professor, GVPIHLR",
         "Prof. Dr. G. Sitarama Brahmam, Professor, GVPIHLR",
-        "Prof. P. Prapoorna Roja, Professor, GVPIHLR",
+        "Prof. Dr. P. Prapoorna Roja, Professor, GVPIHLR",
         "Prof. Dr. C. V. Guru Rao, Professor, GVPIHLR",
         "Prof. D. Saritha, Professor, GVPIHLR",
-        "Prof. N Venu Gopal, Professor, GVPIHLR",
-    ]),
-    ("Invited Speakers", [
-        "Prof. Dr. Venu Govinda Rajulu",
-        "Prof. Aditya Shiva Varma",
-        "Prof. P Krishna Saatry",
-        "Prof. P Srinivasa Murthy",
-        "Prof. DVLN Somayajulu",
-        "Prof. ASN Chakravarthy",
+        "Prof. N. Venu Gopal, Professor, GVPIHLR",
     ]),
     ("Chairs", [
-        "Dr. K. B. Madhuri, Dean School of Computer Science and Engineering, GVPIHLR",
-        "Dr. I.S. Pallavi, Dean School of Sciences, GVPIHLR",
+        "Dr. K. B. Madhuri, Dean, School of Computer Science and Engineering, GVPIHLR",
+        "Dr. I. S. Pallavi, Dean, School of Sciences, GVPIHLR",
     ]),
     ("Organizing Secretaries", [
-        "Dr. PVS Lakshmi Jagadamba, Professor, HoD, CSE, GVPIHLR",
-        "Dr. N. V. Ramana Murty, HoD, CSE(AI&ML), GVPIHLR",
+        "Dr. P. V. S. Lakshmi Jagadamba, Professor, HoD, CSE, GVPIHLR",
+        "Dr. N. V. Ramana Murty, Professor, HoD, CSE(AI&ML), GVPIHLR",
     ]),
     ("Secretaries", [
-        "Dr. D. K. Bebarta, Assoc. Prof., HoD, CSE(AI&ML), GVPCEW",
-        "Dr. M. Bhanu Sridhar, Assoc. Prof., HoD, IT, GVPCEW",
-        "Dr. D. Uma Devi, Prof., HoD, CSE(AI&ML), GVPCOE",
-        "Dr. Y. Anuradha, Prof., HoD, CSE(Data Science), GVPCOE",
-        "Dr. G. R. S. Murthy, Prof., HoD, CSE, GVPGDPGC(A)",
+        "Dr. D. K. Bebarta, Professor, HoD, CSE(AI&ML), GVPCEW(A)",
+        "Dr. M. Bhanu Sridhar, Professor, HoD, IT, GVPCEW(A)",
+        "Dr. D. Uma Devi, Professor, CSE(AI&ML), GVPCE(A)",
+        "Dr. Y. Anuradha, Professor, HoD, CSE(Data Science), GVPCE(A)",
+        "Dr. G. R. S. Murthy, Professor, HoD, CSE, GVPCDPGC(A)",
     ]),
-    ("Organizing Committee Members", [
+    ("Members", [
         "Dr. Bh. Padma, Professor, GVPIHLR",
+        "Dr. N. Sharmili, Professor, GVPIHLR",
         "Dr. D. Chandravathi, Assoc. Prof., GVPIHLR",
+        "Dr. B. Jaya Lakshmi, Assoc. Prof., GVPIHLR",
         "Dr. G. Satya Keerthi, Assoc. Prof., GVPIHLR",
         "Dr. Ch. Sitha Kumari, Assoc. Prof., GVPIHLR",
         "Dr. K. K. Sandhya Rani, Assoc. Prof., GVPIHLR",
         "Dr. V. Lakshmana Rao, Assoc. Prof., GVPIHLR",
         "Dr. S. Sumahasan, Assoc. Prof., GVPIHLR",
         "Dr. D. Indu, Assoc. Prof., GVPIHLR",
-        "Dr. S. Kranthi Kiran, Assoc. Prof., GVPIHLR",
+        "Dr. S. Kanthi Kiran, Assoc. Prof., GVPIHLR",
         "Mr. G. Kalyan Chakravarthy, Asst. Prof., GVPIHLR",
         "Dr. D. S. S. N. Raju, Asst. Prof., GVPIHLR",
         "Mrs. P. Ratna Pavani, Asst. Prof., GVPIHLR",
@@ -169,9 +164,9 @@ COMMITTEE_DATA = [
         "Mrs. R. Archana, Asst. Prof., GVPIHLR",
     ]),
     ("Technical Program Committee", [
-        "Dr. K. Purushottam Naidu, Assoc. Prof., GVPIHLR",
+        "Dr. K. Purushotam Naidu, Assoc. Prof., GVPIHLR",
         "Mr. G. Appajee, Asst. Prof., GVPIHLR",
-        "Mr. D. V. Murali Krishna, Network Admin, GVPCDPGDC",
+        "Mr. D. V. Murali Krishna, Network Admin, GVPCDPGC(A)",
     ]),
 ]
 
@@ -182,6 +177,37 @@ DEFAULT_DATES = [
     ("NISE 2026 – Day 1", date(2026, 12, 17), "Conference begins"),
     ("NISE 2026 – Day 3", date(2026, 12, 19), "Conference concludes"),
 ]
+
+
+# (kind, name, designation, details) - edited later from Admin -> Speakers
+DEFAULT_SPEAKERS = [
+    ("keynote", "Prof. Dr. Venu Govindaraju", "Senior Vice President for Research, Innovation and Economic Development, Distinguished Professor of Computer Science and Engineering",
+     "School of Engineering and Applied Sciences at the University at Buffalo, The State University of New York, Buffalo, New York, US."),
+    ("invited", "Prof. Audithan Sivaraman, SMIEEE", "Professor & Head, Dept of IT", "Netaji Subash University of Technology, New Delhi"),
+    ("invited", "Prof. Krishna Sastry Pendyala", "Ex. Partner EY, Ex. PwC, Cyber Security Member Regulatory authorities", "Adjunct Faculty IIM B"),
+    ("invited", "Prof. P. Krishna Reddy", "Professor", "IIIT Hyderabad"),
+    ("invited", "Prof. Srinivasa Murthy Pedapudi", "Researcher in Digital Forensics", ""),
+    ("invited", "Prof. D. V. L. N. Somayajulu", "Director, NIT Manipur", ""),
+    ("invited", "Prof. A. S. N. Chakravarthy", "Professor of CSE", "JNTU Narasaraopet"),
+]
+
+
+def seed_speakers(db: Session) -> None:
+    """Only when there are no speakers yet, so edits/deletes made by the admin are never undone."""
+    if db.scalar(select(func.count()).select_from(Speaker)):
+        return
+    for i, (kind, name, desig, details) in enumerate(DEFAULT_SPEAKERS):
+        db.add(Speaker(kind=kind, name=name, designation=desig or None, details=details or None, sort_order=(i + 1) * 10))
+    # the old committee-style "Invited Speakers" list is replaced by the dedicated section
+    for m in db.scalars(select(CommitteeMember).where(CommitteeMember.group == "Invited Speakers")):
+        db.delete(m)
+
+
+def rename_paper_ids(db: Session) -> None:
+    """RAiSE26-0003 -> NISE2026-0003 (idempotent; also fixes the copy kept on registrations)."""
+    for model in (Paper, Registration):
+        for row in db.scalars(select(model).where(model.paper_code.like("RAiSE26-%"))):
+            row.paper_code = "NISE2026-" + row.paper_code.split("-", 1)[1]
 
 
 def split_person(line: str):
@@ -243,8 +269,9 @@ def apply_brochure(db: Session) -> None:
 
 
 def seed_defaults(db: Session) -> None:
-    if not db.scalar(select(func.count()).select_from(Setting)):
-        for k, v in DEFAULT_SETTINGS.items():
+    # add any setting that is missing (never overwrites values already edited)
+    for k, v in DEFAULT_SETTINGS.items():
+        if db.get(Setting, k) is None:
             db.add(Setting(key=k, value=v))
     if not db.scalar(select(func.count()).select_from(Track)):
         for i, (n, d, ic) in enumerate(DEFAULT_TRACKS):
@@ -254,6 +281,8 @@ def seed_defaults(db: Session) -> None:
     if not db.scalar(select(func.count()).select_from(ImportantDate)):
         for i, (label, d, note) in enumerate(DEFAULT_DATES):
             db.add(ImportantDate(label=label, event_date=d, note=note, sort_order=i))
+    seed_speakers(db)
+    rename_paper_ids(db)
     if not db.scalar(select(User.id).where(User.role == "admin")):
         db.add(User(name=settings.ADMIN_NAME, email=settings.ADMIN_EMAIL.lower(), role="admin",
                     password_hash=hash_password(settings.ADMIN_PASSWORD), approval_status="approved"))
